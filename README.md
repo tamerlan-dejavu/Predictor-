@@ -1,5 +1,7 @@
 # Branch Predictor Lab
 
+[![Java CI](https://github.com/devchonki/branch-predictor-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/devchonki/branch-predictor-lab/actions/workflows/ci.yml)
+
 **Topic 3 — Computer Architecture & OS**  
 **Team:** devchonki  
 **Stack:** Java 17 · Spring Boot 3.2 · Maven
