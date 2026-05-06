@@ -126,7 +126,19 @@ public class GSharePredictor implements BranchPredictor {
         return "GShare-" + tableSize + "-H" + historyBits;
     }
 
-    // ── package-visible for testing ──────────────────────────────────────────
+    // ── package-visible helpers ───────────────────────────────────────────────
+
+    /**
+     * Returns the prediction for {@code pc} WITHOUT modifying any counter or GHR.
+     * Uses the current GHR value, which is the same GHR that the next
+     * {@link #update} call will use — so the result is consistent with what
+     * a full {@link #predict} call would return.
+     * Used by {@link TournamentPredictor} to avoid inflating this predictor's
+     * own {@code totalPredictions}.
+     */
+    boolean peek(long pc) {
+        return pht[getIndex(pc)] >= 2;
+    }
 
     /** Returns the current value of the Global History Register. */
     int getGhr() {

@@ -63,9 +63,10 @@ public class TournamentPredictor implements BranchPredictor {
     private long total         = 0;
     private long mispredictions = 0;
 
-    // ── last sub-predictor outputs (cached from predict(), used by update()) ──
-    private boolean lastLocalPred;
-    private boolean lastGlobalPred;
+    // ── decision snapshot from predict() — reused in update() for correct scoring ──
+    private boolean lastLocalPred;    // local sub-predictor answer at predict-time
+    private boolean lastGlobalPred;   // global sub-predictor answer at predict-time
+    private boolean lastUsedGlobal;   // which sub-predictor the chooser selected
 
     // ── constructors ─────────────────────────────────────────────────────────
 
@@ -99,50 +100,65 @@ public class TournamentPredictor implements BranchPredictor {
     // ── BranchPredictor ──────────────────────────────────────────────────────
 
     /**
-     * Calls both sub-predictors, lets the chooser select the final answer,
-     * and caches both sub-predictions for use in {@link #update}.
+     * Consults both sub-predictors via side-effect-free {@code peek()}, lets the
+     * chooser select the final answer, and snapshots the decision for {@link #update}.
+     *
+     * <p><b>Bug fix — sub-predictor totalPredictions inflation:</b>
+     * Previously called {@code local.predict()} and {@code global.predict()}, which
+     * incremented their {@code totalPredictions} on every branch. This distorted
+     * sub-predictor statistics (they appeared to have evaluated every branch twice
+     * if also used standalone). {@code peek()} returns the same PHT/GHR-derived
+     * answer without touching any counter.
      */
     @Override
     public boolean predict(long pc) {
         total++;
         int     chooserIdx = ghr & chooserMask;
-        boolean useGlobal  = chooser[chooserIdx] >= 2;
+        lastUsedGlobal = chooser[chooserIdx] >= 2;
 
-        lastLocalPred  = local.predict(pc);
-        lastGlobalPred = global.predict(pc);
+        lastLocalPred  = local.peek(pc);
+        lastGlobalPred = global.peek(pc);
 
-        return useGlobal ? lastGlobalPred : lastLocalPred;
+        return lastUsedGlobal ? lastGlobalPred : lastLocalPred;
     }
 
     /**
      * <ol>
+     *   <li>Scores the tournament prediction using the decision snapshotted in
+     *       {@link #predict} — <em>before</em> any state is mutated.</li>
      *   <li>Forwards the true outcome to both sub-predictors (updates their PHTs/GHR).</li>
      *   <li>Updates the chooser only when sub-predictors disagreed.</li>
-     *   <li>Scores the final (chooser-selected) prediction against the true outcome.</li>
      *   <li>Shifts the tournament GHR.</li>
      * </ol>
+     *
+     * <p><b>Bug fix — chooser-updated scoring:</b>
+     * Previously the misprediction was scored AFTER updating the chooser, so if
+     * the chooser flipped its binary decision during the update the wrong prediction
+     * was compared against {@code taken}.  Now {@code lastUsedGlobal} (cached in
+     * {@code predict()}) is used, which reflects exactly what was returned to the
+     * caller.
      */
     @Override
     public void update(long pc, boolean taken) {
         int chooserIdx = ghr & chooserMask;
 
-        // ── 1. update sub-predictors ─────────────────────────────────────────
+        // ── 1. score with the decision that was actually returned ─────────────
+        boolean finalPred = lastUsedGlobal ? lastGlobalPred : lastLocalPred;
+        if (finalPred != taken) {
+            mispredictions++;
+        }
+
+        // ── 2. update sub-predictors (PHT + internal GHR) ────────────────────
         local.update(pc, taken);
         global.update(pc, taken);
 
-        // ── 2. update chooser (only on disagreement) ─────────────────────────
+        // ── 3. update chooser (only when sub-predictors disagreed) ───────────
         if (lastLocalPred != lastGlobalPred) {
             if (lastGlobalPred == taken) {
                 chooser[chooserIdx] = Math.min(3, chooser[chooserIdx] + 1); // toward global
             } else {
                 chooser[chooserIdx] = Math.max(0, chooser[chooserIdx] - 1); // toward local
             }
-        }
-
-        // ── 3. score the tournament prediction ───────────────────────────────
-        boolean finalPred = (chooser[chooserIdx] >= 2) ? lastGlobalPred : lastLocalPred;
-        if (finalPred != taken) {
-            mispredictions++;
         }
 
         // ── 4. update tournament GHR ─────────────────────────────────────────

@@ -114,6 +114,17 @@ public class BimodalPredictor implements BranchPredictor {
         return "Bimodal-" + tableSize;
     }
 
+    // ── package-visible helpers ───────────────────────────────────────────────
+
+    /**
+     * Returns the prediction for {@code pc} WITHOUT modifying any counter or PHT.
+     * Used by {@link TournamentPredictor} so that calling predict-on-behalf-of-tournament
+     * does not inflate this predictor's own {@code totalPredictions}.
+     */
+    boolean peek(long pc) {
+        return pht[getIndex(pc)] >= 2;
+    }
+
     // ── internals ────────────────────────────────────────────────────────────
 
     /**
