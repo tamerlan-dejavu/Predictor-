@@ -6,6 +6,7 @@ import kz.devchonki.predictor.parser.TraceParser;
 import kz.devchonki.predictor.predictor.BranchPredictor;
 import kz.devchonki.predictor.predictor.impl.BimodalPredictor;
 import kz.devchonki.predictor.predictor.impl.StaticPredictor;
+import kz.devchonki.predictor.predictor.impl.StaticPredictor.StaticStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ class HarnessTest {
         harness = new Harness(parser);
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────
+    // â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private List<TraceEntry> repeat(long pc, boolean taken, int count) {
         List<TraceEntry> list = new ArrayList<>(count);
@@ -39,7 +40,7 @@ class HarnessTest {
         return list;
     }
 
-    // ── empty trace ───────────────────────────────────────────────────────
+    // â”€â”€ empty trace â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Test
     @DisplayName("returns empty stats for empty trace")
@@ -51,13 +52,13 @@ class HarnessTest {
         assertEquals(0.0, stats.mpki());
     }
 
-    // ── StaticPredictor (always-taken) vs always_taken trace ──────────────
+    // â”€â”€ StaticPredictor (always-taken) vs always_taken trace â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Test
-    @DisplayName("StaticPredictor(taken) on always-taken trace → 0% miss rate")
+    @DisplayName("StaticPredictor(taken) on always-taken trace â†’ 0% miss rate")
     void staticTakenOnAlwaysTaken() {
         List<TraceEntry> trace = repeat(0x400000L, true, 1000);
-        PredictorStats stats = harness.run(new StaticPredictor(true), trace);
+        PredictorStats stats = harness.run(new StaticPredictor(StaticStrategy.ALWAYS_TAKEN), trace);
 
         assertEquals(1000, stats.totalPredictions());
         assertEquals(0, stats.mispredictions());
@@ -65,13 +66,13 @@ class HarnessTest {
         assertEquals(0.0, stats.mpki(), 1e-9);
     }
 
-    // ── StaticPredictor (always-taken) vs always_not_taken trace ──────────
+    // â”€â”€ StaticPredictor (always-taken) vs always_not_taken trace â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Test
-    @DisplayName("StaticPredictor(taken) on always-not-taken trace → 100% miss rate")
+    @DisplayName("StaticPredictor(taken) on always-not-taken trace â†’ 100% miss rate")
     void staticTakenOnAlwaysNotTaken() {
         List<TraceEntry> trace = repeat(0x400000L, false, 1000);
-        PredictorStats stats = harness.run(new StaticPredictor(true), trace);
+        PredictorStats stats = harness.run(new StaticPredictor(StaticStrategy.ALWAYS_TAKEN), trace);
 
         assertEquals(1000, stats.totalPredictions());
         assertEquals(1000, stats.mispredictions());
@@ -79,16 +80,16 @@ class HarnessTest {
         assertEquals(1000.0, stats.mpki(), 1e-9);
     }
 
-    // ── alternating trace ─────────────────────────────────────────────────
+    // â”€â”€ alternating trace â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Test
-    @DisplayName("StaticPredictor(taken) on alternating trace → 50% miss rate")
+    @DisplayName("StaticPredictor(taken) on alternating trace â†’ 50% miss rate")
     void staticTakenOnAlternating() {
         List<TraceEntry> trace = new ArrayList<>(1000);
         for (int i = 0; i < 1000; i++) {
             trace.add(new TraceEntry(0x400000L, i % 2 == 0));
         }
-        PredictorStats stats = harness.run(new StaticPredictor(true), trace);
+        PredictorStats stats = harness.run(new StaticPredictor(StaticStrategy.ALWAYS_TAKEN), trace);
 
         assertEquals(1000, stats.totalPredictions());
         assertEquals(500, stats.mispredictions());
@@ -96,7 +97,7 @@ class HarnessTest {
         assertEquals(500.0, stats.mpki(), 1e-9);
     }
 
-    // ── loop_10 pattern ───────────────────────────────────────────────────
+    // â”€â”€ loop_10 pattern â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Test
     @DisplayName("loop-10 pattern: BimodalPredictor misses <= 10% (only on loop exits)")
@@ -109,13 +110,13 @@ class HarnessTest {
         PredictorStats stats = harness.run(new BimodalPredictor(), trace);
 
         assertEquals(1000, stats.totalPredictions());
-        // bimodal eventually predicts taken for all → misses only the not-taken exits
+        // bimodal eventually predicts taken for all â†’ misses only the not-taken exits
         // worst case: 100 exits misses + 100 first-after-exit misses = 200 = 20%
         assertTrue(stats.mispredictionRate() <= 20.0,
-                "Expected ≤ 20% miss rate, got " + stats.mispredictionRate());
+                "Expected â‰¤ 20% miss rate, got " + stats.mispredictionRate());
     }
 
-    // ── mispredictionRate and MPKI formulas ───────────────────────────────
+    // â”€â”€ mispredictionRate and MPKI formulas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Test
     @DisplayName("mispredictionRate = mispredictions / total * 100")
@@ -131,14 +132,14 @@ class HarnessTest {
                 new TraceEntry(0x7L, true),
                 new TraceEntry(0x8L, false)
         );
-        PredictorStats stats = harness.run(new StaticPredictor(true), trace);
+        PredictorStats stats = harness.run(new StaticPredictor(StaticStrategy.ALWAYS_TAKEN), trace);
         assertEquals(8, stats.totalPredictions());
         assertEquals(4, stats.mispredictions());
         assertEquals(50.0, stats.mispredictionRate(), 1e-9);
         assertEquals(500.0, stats.mpki(), 1e-9); // 4 / (8/1000) = 500
     }
 
-    // ── file overload ─────────────────────────────────────────────────────
+    // â”€â”€ file overload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Test
     @DisplayName("run(predictor, Path) delegates to run(predictor, List)")
@@ -148,17 +149,17 @@ class HarnessTest {
             // skip if running outside project root
             return;
         }
-        PredictorStats stats = harness.run(new StaticPredictor(true), alwaysTaken);
+        PredictorStats stats = harness.run(new StaticPredictor(StaticStrategy.ALWAYS_TAKEN), alwaysTaken);
         assertEquals(1000, stats.totalPredictions());
         assertEquals(0, stats.mispredictions());
     }
 
-    // ── harness resets predictor state between runs ───────────────────────
+    // â”€â”€ harness resets predictor state between runs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Test
     @DisplayName("harness resets predictor before each run")
     void harnessResetsPredictor() {
-        BranchPredictor predictor = new StaticPredictor(true);
+        BranchPredictor predictor = new StaticPredictor(StaticStrategy.ALWAYS_TAKEN);
         List<TraceEntry> trace = repeat(0x400000L, false, 500);
 
         PredictorStats first = harness.run(predictor, trace);
