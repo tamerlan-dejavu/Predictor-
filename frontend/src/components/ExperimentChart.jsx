@@ -14,7 +14,7 @@ export default function ExperimentChart({ data, metric = 'mispredictionRate' }) 
 
   const chartData = data.map((p) => ({
     tableSize: p.tableSize,
-    mispredictionRate: Number((p.mispredictionRate * 100).toFixed(2)),
+    mispredictionRate: Number(p.mispredictionRate.toFixed(2)),
     mpki: Number(p.mpki.toFixed(3)),
   }))
 

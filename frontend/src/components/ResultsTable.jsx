@@ -77,7 +77,7 @@ export default function ResultsTable({ rows }) {
               <td className="px-4 py-2.5 font-medium text-white">{r.predictorName}</td>
               <td className="px-4 py-2.5 text-right tabular-nums text-gray-200">{r.totalPredictions.toLocaleString()}</td>
               <td className="px-4 py-2.5 text-right tabular-nums text-gray-200">{r.mispredictions.toLocaleString()}</td>
-              <td className="px-4 py-2.5 text-right tabular-nums text-gray-200">{(r.mispredictionRate * 100).toFixed(2)}%</td>
+              <td className="px-4 py-2.5 text-right tabular-nums text-gray-200">{r.mispredictionRate.toFixed(2)}%</td>
               <td className="px-4 py-2.5 text-right tabular-nums text-gray-200">{r.mpki.toFixed(3)}</td>
             </tr>
           ))}

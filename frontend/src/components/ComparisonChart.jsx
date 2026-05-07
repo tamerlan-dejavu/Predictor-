@@ -33,7 +33,7 @@ export default function ComparisonChart({ data }) {
     name: r.predictorName,
     totalPredictions: r.totalPredictions,
     mispredictions: r.mispredictions,
-    mispredictionRate: r.mispredictionRate * 100,
+    mispredictionRate: r.mispredictionRate,
     mpki: r.mpki,
   }))
 
