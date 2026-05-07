@@ -17,7 +17,7 @@ export default function App() {
           </h1>
           <nav className="flex gap-2">
             <NavLink to="/" end className={navLinkClass}>Dashboard</NavLink>
-            <NavLink to="/experiment" className={navLinkClass}>Experiment</NavLink>
+            <NavLink to="/experiment" className={navLinkClass}>Эксперименты</NavLink>
           </nav>
         </div>
       </header>
