@@ -24,3 +24,8 @@ logs/
 traces/*.trace
 traces/*.txt
 !traces/.gitkeep
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
