@@ -1,116 +1,158 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 const PREDICTORS = [
-  { value: 'static_taken', label: 'Static (always taken)' },
-  { value: 'bimodal', label: 'Bimodal' },
-  { value: 'gshare', label: 'GShare' },
-  { value: 'tournament', label: 'Tournament' },
+  { value: 'bimodal',      label: 'Bimodal',     usesHistory: false },
+  { value: 'gshare',       label: 'GShare',      usesHistory: true  },
+  { value: 'tournament',   label: 'Tournament',  usesHistory: true  },
+  { value: 'static_taken', label: 'Static (AT)', usesHistory: false },
+  { value: 'static_nt',    label: 'Static (NT)', usesHistory: false },
 ]
 
-const SAMPLE_TRACE = `0x400000 1
-0x400000 1
-0x400000 1
-0x400000 0
-0x400010 1
-0x400010 0
-`
+// loop_10: 10 iterations of (9 taken + 1 not-taken) at 0x400000
+const LOOP_10_TRACE = (() => {
+  let s = ''
+  for (let i = 0; i < 10; i++) {
+    for (let j = 0; j < 9; j++) s += '0x400000 1\n'
+    s += '0x400000 0\n'
+  }
+  return s
+})()
 
-export default function PredictorForm({ onSubmit, mode = 'single', loading = false }) {
-  const [predictorType, setPredictorType] = useState('gshare')
+const log2 = (n) => Math.round(Math.log2(n))
+
+export default function PredictorForm({ onSubmit, loading = false }) {
   const [selected, setSelected] = useState(['bimodal', 'gshare', 'tournament'])
-  const [tableSize, setTableSize] = useState(1024)
+  const [tableExp, setTableExp] = useState(10)   // 2^10 = 1024
   const [historyBits, setHistoryBits] = useState(8)
-  const [traceContent, setTraceContent] = useState(SAMPLE_TRACE)
+  const [traceContent, setTraceContent] = useState('')
+
+  const tableSize = useMemo(() => 2 ** tableExp, [tableExp])
+  const showHistory = useMemo(
+    () => selected.some((v) => PREDICTORS.find((p) => p.value === v)?.usesHistory),
+    [selected]
+  )
 
   const toggle = (val) =>
     setSelected((prev) =>
       prev.includes(val) ? prev.filter((p) => p !== val) : [...prev, val]
     )
 
+  const loadSample = () => setTraceContent(LOOP_10_TRACE)
+
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (mode === 'compare') {
-      onSubmit({ predictors: selected, tableSize: Number(tableSize), historyBits: Number(historyBits), traceContent })
-    } else {
-      onSubmit({ predictorType, tableSize: Number(tableSize), historyBits: Number(historyBits), traceContent })
-    }
+    if (selected.length === 0 || !traceContent.trim()) return
+    onSubmit({
+      predictors: selected,
+      tableSize,
+      historyBits: Number(historyBits),
+      traceContent,
+    })
   }
 
+  const canSubmit = selected.length > 0 && traceContent.trim().length > 0 && !loading
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-slate-200 p-6 space-y-4">
-      {mode === 'single' ? (
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Predictor</label>
-          <select
-            value={predictorType}
-            onChange={(e) => setPredictorType(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white"
-          >
-            {PREDICTORS.map((p) => (
-              <option key={p.value} value={p.value}>{p.label}</option>
-            ))}
-          </select>
+    <form onSubmit={handleSubmit} className="bg-gray-800 rounded-lg border border-gray-700 p-5 space-y-5">
+      <h2 className="text-lg font-semibold text-white">Параметры запуска</h2>
+
+      {/* Predictor multiselect */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Предсказатели</label>
+        <div className="space-y-1.5">
+          {PREDICTORS.map((p) => (
+            <label
+              key={p.value}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm cursor-pointer text-gray-200 hover:bg-gray-700"
+            >
+              <input
+                type="checkbox"
+                checked={selected.includes(p.value)}
+                onChange={() => toggle(p.value)}
+                className="w-4 h-4 accent-blue-500"
+              />
+              {p.label}
+            </label>
+          ))}
         </div>
-      ) : (
+      </div>
+
+      {/* Table size slider */}
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-sm font-medium text-gray-300">Table size</label>
+          <span className="text-sm tabular-nums text-blue-400 font-mono">
+            2<sup>{tableExp}</sup> = {tableSize.toLocaleString()}
+          </span>
+        </div>
+        <input
+          type="range"
+          min={4}
+          max={16}
+          step={1}
+          value={tableExp}
+          onChange={(e) => setTableExp(Number(e.target.value))}
+          className="w-full accent-blue-500"
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-0.5">
+          <span>16</span>
+          <span>65 536</span>
+        </div>
+      </div>
+
+      {/* History bits slider — only when GShare or Tournament selected */}
+      {showHistory && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Predictors to compare</label>
-          <div className="flex flex-wrap gap-2">
-            {PREDICTORS.map((p) => (
-              <label key={p.value} className="flex items-center gap-2 px-3 py-1.5 border border-slate-300 rounded-md text-sm cursor-pointer hover:bg-slate-50">
-                <input
-                  type="checkbox"
-                  checked={selected.includes(p.value)}
-                  onChange={() => toggle(p.value)}
-                />
-                {p.label}
-              </label>
-            ))}
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-sm font-medium text-gray-300">History bits</label>
+            <span className="text-sm tabular-nums text-blue-400 font-mono">{historyBits}</span>
+          </div>
+          <input
+            type="range"
+            min={2}
+            max={16}
+            step={1}
+            value={historyBits}
+            onChange={(e) => setHistoryBits(Number(e.target.value))}
+            className="w-full accent-blue-500"
+          />
+          <div className="flex justify-between text-xs text-gray-500 mt-0.5">
+            <span>2</span>
+            <span>16</span>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Table size</label>
-          <input
-            type="number"
-            min="2"
-            value={tableSize}
-            onChange={(e) => setTableSize(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">History bits</label>
-          <input
-            type="number"
-            min="1"
-            max="20"
-            value={historyBits}
-            onChange={(e) => setHistoryBits(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md"
-          />
-        </div>
-      </div>
-
+      {/* Trace textarea */}
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Trace content</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-sm font-medium text-gray-300">Trace</label>
+          <button
+            type="button"
+            onClick={loadSample}
+            className="text-xs text-blue-400 hover:text-blue-300 underline"
+          >
+            Загрузить пример трассы
+          </button>
+        </div>
         <textarea
           value={traceContent}
           onChange={(e) => setTraceContent(e.target.value)}
           rows={6}
-          className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono text-xs"
-          placeholder="0x400000 1"
+          placeholder="0x400000 1&#10;0x400000 0"
+          className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-md font-mono text-xs text-gray-100 placeholder-gray-600 focus:outline-none focus:border-blue-500"
         />
-        <p className="text-xs text-slate-500 mt-1">Format: <code>PC_hex outcome</code> per line (1 = taken, 0 = not taken)</p>
+        <p className="text-xs text-gray-500 mt-1">
+          Формат: <code className="text-gray-400">PC_hex outcome</code> (1 = taken, 0 = not taken)
+        </p>
       </div>
 
       <button
         type="submit"
-        disabled={loading || (mode === 'compare' && selected.length === 0)}
-        className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md font-medium hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
+        disabled={!canSubmit}
+        className="w-full bg-blue-600 text-white px-4 py-2.5 rounded-md font-medium hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
       >
-        {loading ? 'Running…' : mode === 'compare' ? 'Compare predictors' : 'Run predictor'}
+        {loading ? 'Запуск…' : 'Запустить сравнение'}
       </button>
     </form>
   )
