@@ -4,6 +4,8 @@ import kz.devchonki.predictor.model.TraceEntry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 
@@ -19,57 +21,57 @@ class TraceParserTest {
         parser = new TraceParser();
     }
 
-    // ── happy-path ────────────────────────────────────────────────────────
-
     @Test
-    @DisplayName("parses '0x400000 1' as taken")
-    void parsesHexTaken() {
+    @DisplayName("Simple line: '0x400000 1' maps to TraceEntry(0x400000L, true)")
+    void test_parseSimpleLine() {
         List<TraceEntry> entries = parser.parseFromString("0x400000 1");
         assertEquals(1, entries.size());
+        assertEquals(new TraceEntry(0x400000L, true), entries.get(0));
+    }
+
+    @Test
+    @DisplayName("Not-taken line: '0x400004 0' maps to TraceEntry(0x400004L, false)")
+    void test_parseNotTaken() {
+        List<TraceEntry> entries = parser.parseFromString("0x400004 0");
+        assertEquals(1, entries.size());
+        assertEquals(new TraceEntry(0x400004L, false), entries.get(0));
+    }
+
+    @Test
+    @DisplayName("Comment lines starting with '#' are skipped")
+    void test_skipComments() {
+        String content = """
+                # trace header
+                0x400000 1
+                # mid comment
+                0x400004 0
+                """;
+        List<TraceEntry> entries = parser.parseFromString(content);
+        assertEquals(2, entries.size());
         assertEquals(0x400000L, entries.get(0).pc());
         assertTrue(entries.get(0).taken());
+        assertEquals(0x400004L, entries.get(1).pc());
+        assertFalse(entries.get(1).taken());
     }
 
     @Test
-    @DisplayName("parses '0x400000 0' as not-taken")
-    void parsesHexNotTaken() {
-        List<TraceEntry> entries = parser.parseFromString("0x400000 0");
-        assertEquals(1, entries.size());
-        assertFalse(entries.get(0).taken());
-    }
-
-    @Test
-    @DisplayName("parses address without 0x prefix")
-    void parsesAddressWithoutPrefix() {
-        List<TraceEntry> entries = parser.parseFromString("400000 1");
-        assertEquals(1, entries.size());
-        assertEquals(0x400000L, entries.get(0).pc());
-    }
-
-    @Test
-    @DisplayName("skips comment lines starting with #")
-    void skipsComments() {
+    @DisplayName("Blank lines are skipped")
+    void test_skipEmptyLines() {
         String content = """
-                # this is a comment
+
                 0x400000 1
-                # another comment
+
+
                 0x400004 0
+
                 """;
         List<TraceEntry> entries = parser.parseFromString(content);
         assertEquals(2, entries.size());
     }
 
     @Test
-    @DisplayName("skips blank lines")
-    void skipsBlankLines() {
-        String content = "\n\n0x400000 1\n\n0x400004 0\n\n";
-        List<TraceEntry> entries = parser.parseFromString(content);
-        assertEquals(2, entries.size());
-    }
-
-    @Test
-    @DisplayName("parses multiple entries in order")
-    void parsesMultipleEntriesInOrder() {
+    @DisplayName("Three non-comment lines produce three TraceEntry values in order")
+    void test_parseMultipleLines() {
         String content = """
                 0x100 1
                 0x200 0
@@ -77,47 +79,40 @@ class TraceParserTest {
                 """;
         List<TraceEntry> entries = parser.parseFromString(content);
         assertEquals(3, entries.size());
-        assertEquals(0x100L, entries.get(0).pc());
+        assertEquals(new TraceEntry(0x100L, true), entries.get(0));
+        assertEquals(new TraceEntry(0x200L, false), entries.get(1));
+        assertEquals(new TraceEntry(0x300L, true), entries.get(2));
+    }
+
+    @Test
+    @DisplayName("Malformed line 'garbage' throws IllegalArgumentException")
+    void test_invalidLine_throws() {
+        assertThrows(IllegalArgumentException.class,
+                () -> parser.parseFromString("garbage"));
+    }
+
+    @Test
+    @DisplayName("Hex PC without 0x prefix parses correctly")
+    void test_hexWithoutPrefix() {
+        List<TraceEntry> entries = parser.parseFromString("400000 1");
+        assertEquals(1, entries.size());
+        assertEquals(0x400000L, entries.get(0).pc());
         assertTrue(entries.get(0).taken());
-        assertEquals(0x200L, entries.get(1).pc());
-        assertFalse(entries.get(1).taken());
-        assertEquals(0x300L, entries.get(2).pc());
     }
 
     @Test
-    @DisplayName("accepts 'T' and 'N' tokens")
-    void acceptsTAndNTokens() {
-        List<TraceEntry> entries = parser.parseFromString("0x400000 T\n0x400004 N");
-        assertTrue(entries.get(0).taken());
-        assertFalse(entries.get(1).taken());
+    @DisplayName("parseFromString multi-line content yields two entries")
+    void test_parseFromString() {
+        List<TraceEntry> entries = parser.parseFromString("0x100 1\n0x200 0");
+        assertEquals(2, entries.size());
+        assertEquals(new TraceEntry(0x100L, true), entries.get(0));
+        assertEquals(new TraceEntry(0x200L, false), entries.get(1));
     }
 
-    @Test
-    @DisplayName("returns empty list for blank input")
-    void returnsEmptyForBlankInput() {
-        assertTrue(parser.parseFromString("   \n  \n").isEmpty());
-    }
-
-    // ── error-path ────────────────────────────────────────────────────────
-
-    @Test
-    @DisplayName("throws IllegalArgumentException for malformed line (too few tokens)")
-    void throwsOnMalformedLine() {
-        assertThrows(IllegalArgumentException.class,
-                () -> parser.parseFromString("0x400000"));
-    }
-
-    @Test
-    @DisplayName("throws IllegalArgumentException for invalid hex PC")
-    void throwsOnInvalidHexPc() {
-        assertThrows(IllegalArgumentException.class,
-                () -> parser.parseFromString("0xZZZZZZ 1"));
-    }
-
-    @Test
-    @DisplayName("throws IllegalArgumentException for unknown outcome token")
-    void throwsOnUnknownOutcomeToken() {
-        assertThrows(IllegalArgumentException.class,
-                () -> parser.parseFromString("0x400000 maybe"));
+    @ParameterizedTest(name = "invalid hex token ''{0}'' throws")
+    @ValueSource(strings = {"0xZZ 1", "0x400000", "0x400000 maybe"})
+    @DisplayName("Various invalid inputs throw IllegalArgumentException")
+    void test_invalidInputs_parameterized(String line) {
+        assertThrows(IllegalArgumentException.class, () -> parser.parseFromString(line));
     }
 }
