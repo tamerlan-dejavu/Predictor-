@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import ExperimentChart from '../components/ExperimentChart.jsx'
 import LoadingSpinner from '../components/LoadingSpinner.jsx'
-import { getExperiment } from '../api/predictorApi.js'
+import { comparePredictors } from '../api/predictorApi.js'
 
 const PREDICTORS = [
   { value: 'bimodal',    label: 'Bimodal' },
@@ -9,11 +9,19 @@ const PREDICTORS = [
   { value: 'tournament', label: 'Tournament' },
 ]
 
-const DEFAULT_PARAMS = { minTable: 16, maxTable: 65536, steps: 8 }
-const SATURATION_THRESHOLD_PCT = 1.0  // абсолютная разница в процентных пунктах
+// LOOP_10_TRACE: 10 iterations of (9 taken + 1 not-taken) = 100 branches total
+const LOOP_10_TRACE = (() => {
+  let s = ''
+  for (let i = 0; i < 10; i++) {
+    for (let j = 0; j < 9; j++) s += '0x400000 1\n'
+    s += '0x400000 0\n'
+  }
+  return s
+})()
 
-// Точка насыщения: наименьший tableSize, начиная с которого rate
-// перестаёт значимо (>1 п.п.) отличаться от глобального минимума.
+const TABLE_SIZES = [16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
+const SATURATION_THRESHOLD_PCT = 1.0
+
 function findSaturationPoint(points) {
   if (!points || points.length < 2) return null
   const minRate = Math.min(...points.map((p) => p.mispredictionRate))
@@ -32,7 +40,7 @@ function findBest(points) {
 }
 
 export default function ExperimentPage() {
-  const [predictor, setPredictor] = useState('gshare')
+  const [predictor, setPredictor] = useState('bimodal')
   const [points, setPoints] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -40,22 +48,45 @@ export default function ExperimentPage() {
   const handleRun = async () => {
     setLoading(true)
     setError(null)
+    setPoints([])
+
     try {
-      console.log('Fetching experiment:', { predictor, ...DEFAULT_PARAMS })
-      const response = await getExperiment({ predictor, ...DEFAULT_PARAMS })
-      console.log('Experiment response:', response)
-      const { data } = response
-      if (!Array.isArray(data)) {
-        console.error('Invalid data type:', typeof data, data)
-        throw new Error('Invalid response format: expected array of points')
+      const experimentPoints = []
+
+      // Run predictor on LOOP_10_TRACE with different table sizes
+      for (const tableSize of TABLE_SIZES) {
+        try {
+          const response = await comparePredictors({
+            predictors: [predictor],
+            tableSize,
+            historyBits: 8,
+            traceContent: LOOP_10_TRACE,
+          })
+
+          if (response.data && response.data.length > 0) {
+            const result = response.data[0]
+            experimentPoints.push({
+              tableSize,
+              mispredictionRate: result.mispredictionRate,
+              mpki: result.mpki,
+              name: result.predictorName,
+            })
+          }
+        } catch (err) {
+          console.warn(`Failed for tableSize ${tableSize}:`, err.message)
+          // Continue with next table size
+        }
       }
-      const sorted = [...data].sort((a, b) => a.tableSize - b.tableSize)
-      setPoints(sorted)
+
+      if (experimentPoints.length === 0) {
+        throw new Error('No valid data points returned from experiment')
+      }
+
+      setPoints(experimentPoints)
     } catch (err) {
       console.error('Experiment error:', err)
       const errorMsg = err?.response?.data?.error || err?.message || 'Failed to run experiment'
       setError(errorMsg)
-      setPoints([])
     } finally {
       setLoading(false)
     }
@@ -102,8 +133,9 @@ export default function ExperimentPage() {
         </div>
 
         <div className="text-xs text-gray-500">
-          Request parameters: <span className="font-mono text-gray-400">minTable={DEFAULT_PARAMS.minTable},
-          maxTable={DEFAULT_PARAMS.maxTable.toLocaleString()}, steps={DEFAULT_PARAMS.steps}</span>
+          <div>Trace: <span className="font-mono text-gray-400">LOOP_10</span> (100 branches: 90 taken, 10 not-taken)</div>
+          <div>Table sizes: <span className="font-mono text-gray-400">16 to 65536</span> ({TABLE_SIZES.length} points)</div>
+          <div>History bits: <span className="font-mono text-gray-400">8</span> (for GShare & Tournament)</div>
         </div>
 
         <button
