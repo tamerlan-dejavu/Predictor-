@@ -41,13 +41,18 @@ export default function ExperimentPage() {
     setLoading(true)
     setError(null)
     try {
-      const { data } = await getExperiment({ predictor, ...DEFAULT_PARAMS })
+      console.log('Fetching experiment:', { predictor, ...DEFAULT_PARAMS })
+      const response = await getExperiment({ predictor, ...DEFAULT_PARAMS })
+      console.log('Experiment response:', response)
+      const { data } = response
       if (!Array.isArray(data)) {
+        console.error('Invalid data type:', typeof data, data)
         throw new Error('Invalid response format: expected array of points')
       }
       const sorted = [...data].sort((a, b) => a.tableSize - b.tableSize)
       setPoints(sorted)
     } catch (err) {
+      console.error('Experiment error:', err)
       const errorMsg = err?.response?.data?.error || err?.message || 'Failed to run experiment'
       setError(errorMsg)
       setPoints([])
@@ -112,8 +117,13 @@ export default function ExperimentPage() {
       </section>
 
       {error && (
-        <div className="bg-red-950/60 border border-red-700 text-red-200 rounded-md px-4 py-3 text-sm">
-          <span className="font-semibold text-red-300">Error:</span> {error}
+        <div className="bg-red-950/60 border border-red-700 text-red-200 rounded-md px-4 py-3 text-sm space-y-2">
+          <div>
+            <span className="font-semibold text-red-300">Error:</span> {error}
+          </div>
+          <div className="text-xs text-red-300 mt-2">
+            Troubleshooting: Open DevTools (F12) → Network tab → click Run Experiment again to see API response
+          </div>
         </div>
       )}
 
