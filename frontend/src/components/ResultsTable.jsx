@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 
 const COLUMNS = [
-  { key: 'predictorName',     label: 'Предсказатель', align: 'left'  },
-  { key: 'totalPredictions',  label: 'Всего',         align: 'right' },
-  { key: 'mispredictions',    label: 'Ошибок',        align: 'right' },
+  { key: 'predictorName',     label: 'Predictor',     align: 'left'  },
+  { key: 'totalPredictions',  label: 'Total',         align: 'right' },
+  { key: 'mispredictions',    label: 'Misses',        align: 'right' },
   { key: 'mispredictionRate', label: 'Rate %',        align: 'right' },
   { key: 'mpki',              label: 'MPKI',          align: 'right' },
 ]

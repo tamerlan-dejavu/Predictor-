@@ -71,7 +71,7 @@ export default function ExperimentChart({ data, optimalRate, saturationTableSize
               y={optimalRate}
               stroke="#a3e635"
               strokeDasharray="4 4"
-              label={{ value: `Оптимум ${optimalRate.toFixed(2)}%`, position: 'right', fill: '#a3e635', fontSize: 11 }}
+              label={{ value: `Optimal ${optimalRate.toFixed(2)}%`, position: 'right', fill: '#a3e635', fontSize: 11 }}
             />
           )}
 
@@ -80,7 +80,7 @@ export default function ExperimentChart({ data, optimalRate, saturationTableSize
               x={saturationTableSize}
               stroke="#f59e0b"
               strokeDasharray="6 4"
-              label={{ value: 'насыщение', position: 'top', fill: '#f59e0b', fontSize: 11 }}
+              label={{ value: 'Saturation', position: 'top', fill: '#f59e0b', fontSize: 11 }}
             />
           )}
 

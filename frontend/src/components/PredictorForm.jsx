@@ -54,11 +54,11 @@ export default function PredictorForm({ onSubmit, loading = false }) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-gray-800 rounded-lg border border-gray-700 p-5 space-y-5">
-      <h2 className="text-lg font-semibold text-white">Параметры запуска</h2>
+      <h2 className="text-lg font-semibold text-white">Run Parameters</h2>
 
       {/* Predictor multiselect */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Предсказатели</label>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Predictors</label>
         <div className="space-y-1.5">
           {PREDICTORS.map((p) => (
             <label
@@ -80,7 +80,7 @@ export default function PredictorForm({ onSubmit, loading = false }) {
       {/* Table size slider */}
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="text-sm font-medium text-gray-300">Table size</label>
+          <label className="text-sm font-medium text-gray-300">Table Size</label>
           <span className="text-sm tabular-nums text-blue-400 font-mono">
             2<sup>{tableExp}</sup> = {tableSize.toLocaleString()}
           </span>
@@ -104,7 +104,7 @@ export default function PredictorForm({ onSubmit, loading = false }) {
       {showHistory && (
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium text-gray-300">History bits</label>
+            <label className="text-sm font-medium text-gray-300">History Bits</label>
             <span className="text-sm tabular-nums text-blue-400 font-mono">{historyBits}</span>
           </div>
           <input
@@ -132,7 +132,7 @@ export default function PredictorForm({ onSubmit, loading = false }) {
             onClick={loadSample}
             className="text-xs text-blue-400 hover:text-blue-300 underline"
           >
-            Загрузить пример трассы
+            Load sample trace
           </button>
         </div>
         <textarea
@@ -143,7 +143,7 @@ export default function PredictorForm({ onSubmit, loading = false }) {
           className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-md font-mono text-xs text-gray-100 placeholder-gray-600 focus:outline-none focus:border-blue-500"
         />
         <p className="text-xs text-gray-500 mt-1">
-          Формат: <code className="text-gray-400">PC_hex outcome</code> (1 = taken, 0 = not taken)
+          Format: <code className="text-gray-400">PC_hex outcome</code> (1 = taken, 0 = not taken)
         </p>
       </div>
 
@@ -152,7 +152,7 @@ export default function PredictorForm({ onSubmit, loading = false }) {
         disabled={!canSubmit}
         className="w-full bg-blue-600 text-white px-4 py-2.5 rounded-md font-medium hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
       >
-        {loading ? 'Запуск…' : 'Запустить сравнение'}
+        {loading ? 'Running…' : 'Run Comparison'}
       </button>
     </form>
   )

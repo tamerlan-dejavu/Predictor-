@@ -59,15 +59,15 @@ export default function ExperimentPage() {
   return (
     <div className="space-y-5">
       <header>
-        <h2 className="text-2xl font-bold text-white">Эксперимент: зависимость точности от размера таблицы</h2>
+        <h2 className="text-2xl font-bold text-white">Experiment: Accuracy vs. Table Size</h2>
         <p className="text-gray-400 text-sm mt-1">
-          Свип tableSize по log2 (×2 на шаг) — смотрим, до какого размера выгодно расти, прежде чем начнётся насыщение.
+          Sweep tableSize by log2 (×2 per step) — observe saturation point where accuracy improvement plateaus.
         </p>
       </header>
 
       <section className="bg-gray-800 rounded-lg border border-gray-700 p-5 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Предсказатель</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Predictor</label>
           <div className="flex flex-wrap gap-2">
             {PREDICTORS.map((p) => (
               <label
@@ -93,7 +93,7 @@ export default function ExperimentPage() {
         </div>
 
         <div className="text-xs text-gray-500">
-          Параметры запроса: <span className="font-mono text-gray-400">minTable={DEFAULT_PARAMS.minTable},
+          Request parameters: <span className="font-mono text-gray-400">minTable={DEFAULT_PARAMS.minTable},
           maxTable={DEFAULT_PARAMS.maxTable.toLocaleString()}, steps={DEFAULT_PARAMS.steps}</span>
         </div>
 
@@ -103,25 +103,25 @@ export default function ExperimentPage() {
           disabled={loading}
           className="w-full md:w-auto bg-blue-600 text-white px-5 py-2.5 rounded-md font-medium hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 transition-colors"
         >
-          {loading ? 'Запуск…' : 'Запустить эксперимент'}
+          {loading ? 'Running…' : 'Run Experiment'}
         </button>
       </section>
 
       {error && (
         <div className="bg-red-950/60 border border-red-700 text-red-200 rounded-md px-4 py-3 text-sm">
-          <span className="font-semibold text-red-300">Ошибка:</span> {error}
+          <span className="font-semibold text-red-300">Error:</span> {error}
         </div>
       )}
 
       {loading && (
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-          <LoadingSpinner label={`Свипуем table size для ${predictorLabel}…`} />
+          <LoadingSpinner label={`Sweeping table size for ${predictorLabel}…`} />
         </div>
       )}
 
       {!loading && !error && points.length === 0 && (
         <div className="bg-gray-800 border border-dashed border-gray-700 rounded-lg p-12 text-center text-gray-400 text-sm">
-          Запустите эксперимент, чтобы увидеть график и интерпретацию.
+          Run the experiment to see the graph and interpretation.
         </div>
       )}
 
@@ -134,12 +134,12 @@ export default function ExperimentPage() {
           />
 
           <section className="bg-gray-800 rounded-lg border border-gray-700 p-5 space-y-3">
-            <h3 className="text-lg font-semibold text-white">Интерпретация</h3>
+            <h3 className="text-lg font-semibold text-white">Interpretation</h3>
             {best && (
               <div className="text-sm text-gray-200">
-                <span className="text-gray-400">Лучшая конфигурация: </span>
+                <span className="text-gray-400">Best configuration: </span>
                 <span className="font-mono text-blue-400">tableSize = {best.tableSize.toLocaleString()}</span>
-                {' '}даёт{' '}
+                {' '}yields{' '}
                 <span className="font-mono text-blue-400">{best.mispredictionRate.toFixed(2)}%</span>
                 {' '}misprediction (MPKI <span className="font-mono text-emerald-400">{best.mpki.toFixed(3)}</span>).
               </div>
@@ -147,18 +147,18 @@ export default function ExperimentPage() {
             {saturation && best && (
               <>
                 <div className="text-sm text-gray-200">
-                  <span className="text-gray-400">Точка насыщения: </span>
-                  при <span className="font-mono text-amber-400">tableSize = {saturation.tableSize.toLocaleString()}</span>
-                  {' '}отклонение от оптимума уже &lt; {SATURATION_THRESHOLD_PCT.toFixed(1)} п.п.
+                  <span className="text-gray-400">Saturation point: </span>
+                  at <span className="font-mono text-amber-400">tableSize = {saturation.tableSize.toLocaleString()}</span>
+                  {' '}deviation from optimal is &lt; {SATURATION_THRESHOLD_PCT.toFixed(1)} pp.
                 </div>
                 <div className="text-sm text-gray-200 pt-1 border-t border-gray-700">
-                  <span className="text-gray-400">Вывод: </span>
+                  <span className="text-gray-400">Conclusion: </span>
                   {saturation.tableSize === points[0].tableSize ? (
-                    <>трасса слишком короткая — даже самой маленькой таблицы достаточно, увеличение размера ничего не даёт.</>
+                    <>trace is too short — even smallest table is sufficient, larger sizes bring no improvement.</>
                   ) : (
-                    <>увеличение таблицы выше{' '}
+                    <>increasing table size beyond{' '}
                       <span className="font-mono text-amber-400">{saturation.tableSize.toLocaleString()}</span>
-                      {' '}значимого выигрыша по точности не приносит.
+                      {' '}brings no significant accuracy gain.
                     </>
                   )}
                 </div>
@@ -166,8 +166,8 @@ export default function ExperimentPage() {
             )}
             {!saturation && best && (
               <div className="text-sm text-gray-200 pt-1 border-t border-gray-700">
-                <span className="text-gray-400">Вывод: </span>
-                rate продолжает заметно улучшаться — насыщения в исследованном диапазоне нет, имеет смысл увеличить{' '}
+                <span className="text-gray-400">Conclusion: </span>
+                rate continues improving noticeably — no saturation in tested range, consider increasing{' '}
                 <span className="font-mono">maxTable</span>.
               </div>
             )}

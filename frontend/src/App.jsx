@@ -13,11 +13,11 @@ export default function App() {
       <header className="border-b border-gray-800 bg-gray-900">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-white">
-            Branch Predictor Lab <span className="text-gray-400 font-normal">— Команда Девчонки</span>
+            Branch Predictor Lab
           </h1>
           <nav className="flex gap-2">
             <NavLink to="/" end className={navLinkClass}>Dashboard</NavLink>
-            <NavLink to="/experiment" className={navLinkClass}>Эксперименты</NavLink>
+            <NavLink to="/experiment" className={navLinkClass}>Experiments</NavLink>
           </nav>
         </div>
       </header>
