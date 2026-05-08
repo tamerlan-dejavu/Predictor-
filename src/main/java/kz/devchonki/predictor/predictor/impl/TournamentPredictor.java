@@ -162,7 +162,8 @@ public class TournamentPredictor implements BranchPredictor {
         }
 
         // ── 4. update tournament GHR ─────────────────────────────────────────
-        ghr = ((ghr << 1) | (taken ? 1 : 0)) & chooserMask;
+        int historyMask = (1 << global.getHistoryBits()) - 1;
+        ghr = ((ghr << 1) | (taken ? 1 : 0)) & historyMask;
     }
 
     @Override

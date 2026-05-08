@@ -145,6 +145,11 @@ public class GSharePredictor implements BranchPredictor {
         return ghr;
     }
 
+    /** Returns the history bits width for this GShare instance. */
+    int getHistoryBits() {
+        return historyBits;
+    }
+
     // ── internals ────────────────────────────────────────────────────────────
 
     private int getIndex(long pc) {
