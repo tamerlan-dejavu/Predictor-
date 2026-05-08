@@ -68,15 +68,43 @@ public class PredictorController {
 
     // ── POST /api/run ─────────────────────────────────────────────────────────
 
+    /**
+     * Runs one predictor on an in-memory trace string.
+     *
+     * <p>Validation errors return {@code 400} with JSON {@code {"error":"..."}}
+     * (never a bare 500 for bad input).
+     */
     @PostMapping("/run")
-    public ResponseEntity<?> run(@RequestBody RunRequest req) {
-        BranchPredictor predictor;
-        try {
-            predictor = factory.create(req.predictorType(), req.tableSize(), req.historyBits());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Unknown predictor type"));
+    public ResponseEntity<?> run(@RequestBody(required = false) RunRequest req) {
+        if (req == null) {
+            return badRequest("Request body is required");
         }
-        List<TraceEntry> trace = traceParser.parseFromString(req.traceContent());
+        String type = req.predictorType();
+        if (type == null || type.isBlank()) {
+            return badRequest("predictorType is required");
+        }
+        String traceRaw = req.traceContent();
+        if (traceRaw == null || traceRaw.isBlank()) {
+            return badRequest("traceContent must not be empty");
+        }
+
+        final BranchPredictor predictor;
+        try {
+            predictor = factory.create(type.trim(), req.tableSize(), req.historyBits());
+        } catch (IllegalArgumentException e) {
+            return badRequest(e.getMessage());
+        }
+
+        final List<TraceEntry> trace;
+        try {
+            trace = traceParser.parseFromString(traceRaw);
+        } catch (IllegalArgumentException e) {
+            return badRequest("Invalid trace: " + e.getMessage());
+        }
+        if (trace.isEmpty()) {
+            return badRequest("trace contains no branch events (only blanks/comments?)");
+        }
+
         PredictorStats stats = harness.run(predictor, trace);
         return ResponseEntity.ok(toResponse(predictor.getName(), stats));
     }
@@ -84,13 +112,41 @@ public class PredictorController {
     // ── POST /api/compare ────────────────────────────────────────────────────
 
     @PostMapping("/compare")
-    public ResponseEntity<List<RunResponse>> compare(@RequestBody CompareRequest req) {
-        List<TraceEntry> trace = traceParser.parseFromString(req.traceContent());
+    public ResponseEntity<?> compare(@RequestBody(required = false) CompareRequest req) {
+        if (req == null) {
+            return badRequest("Request body is required");
+        }
+        if (req.predictors() == null || req.predictors().isEmpty()) {
+            return badRequest("predictors list must not be empty");
+        }
+        String traceRaw = req.traceContent();
+        if (traceRaw == null || traceRaw.isBlank()) {
+            return badRequest("traceContent must not be empty");
+        }
+
+        final List<TraceEntry> trace;
+        try {
+            trace = traceParser.parseFromString(traceRaw);
+        } catch (IllegalArgumentException e) {
+            return badRequest("Invalid trace: " + e.getMessage());
+        }
+        if (trace.isEmpty()) {
+            return badRequest("trace contains no branch events");
+        }
+
         List<RunResponse> results = new ArrayList<>();
-        for (String type : req.predictors()) {
-            BranchPredictor predictor = factory.create(type, req.tableSize(), req.historyBits());
-            PredictorStats stats = harness.run(predictor, trace);
-            results.add(toResponse(predictor.getName(), stats));
+        for (String rawType : req.predictors()) {
+            if (rawType == null || rawType.isBlank()) {
+                return badRequest("predictor name must not be blank");
+            }
+            try {
+                BranchPredictor predictor = factory.create(
+                        rawType.trim(), req.tableSize(), req.historyBits());
+                PredictorStats stats = harness.run(predictor, trace);
+                results.add(toResponse(predictor.getName(), stats));
+            } catch (IllegalArgumentException e) {
+                return badRequest(e.getMessage());
+            }
         }
         results.sort(Comparator.comparingDouble(RunResponse::mispredictionRate));
         return ResponseEntity.ok(results);
@@ -99,18 +155,39 @@ public class PredictorController {
     // ── GET /api/experiment ──────────────────────────────────────────────────
 
     @GetMapping("/experiment")
-    public ResponseEntity<List<ExperimentPoint>> experiment(
+    public ResponseEntity<?> experiment(
             @RequestParam String predictor,
             @RequestParam int minTable,
             @RequestParam int maxTable,
             @RequestParam int steps) {
+        if (predictor == null || predictor.isBlank()) {
+            return badRequest("predictor parameter is required");
+        }
+        if (steps < 1) {
+            return badRequest("steps must be >= 1");
+        }
+        if (Integer.bitCount(minTable) != 1) {
+            return badRequest("minTable must be a power of 2");
+        }
+        if (Integer.bitCount(maxTable) != 1) {
+            return badRequest("maxTable must be a power of 2");
+        }
+        if (minTable > maxTable) {
+            return badRequest("minTable must be <= maxTable");
+        }
+
         List<TraceEntry> trace = traceParser.parseFromString(LOOP_10_TRACE);
         List<ExperimentPoint> points = new ArrayList<>();
         int size = minTable;
-        for (int i = 0; i < steps && size <= maxTable; i++, size *= 2) {
-            BranchPredictor p = factory.create(predictor, size, 8);
-            PredictorStats stats = harness.run(p, trace);
-            points.add(new ExperimentPoint(size, stats.mispredictionRate(), stats.mpki()));
+        for (int i = 0; i < steps && size <= maxTable; i++) {
+            try {
+                BranchPredictor p = factory.create(predictor.trim(), size, 8);
+                PredictorStats stats = harness.run(p, trace);
+                points.add(new ExperimentPoint(size, stats.mispredictionRate(), stats.mpki()));
+            } catch (IllegalArgumentException e) {
+                return badRequest(e.getMessage());
+            }
+            size *= 2;
         }
         return ResponseEntity.ok(points);
     }
@@ -121,11 +198,16 @@ public class PredictorController {
     public ResponseEntity<Map<String, Object>> health() {
         return ResponseEntity.ok(Map.of(
                 "status", "UP",
+                "project", "Branch Predictor Lab",
                 "predictors", List.of("static_taken", "bimodal", "gshare", "tournament")
         ));
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
+
+    private static ResponseEntity<Map<String, String>> badRequest(String message) {
+        return ResponseEntity.badRequest().body(Map.of("error", message));
+    }
 
     private RunResponse toResponse(String name, PredictorStats stats) {
         return new RunResponse(name, stats.totalPredictions(), stats.mispredictions(),
