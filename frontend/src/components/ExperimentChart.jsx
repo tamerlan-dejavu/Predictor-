@@ -25,9 +25,13 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 export default function ExperimentChart({ data, optimalRate, saturationTableSize }) {
-  if (!data || data.length === 0) return null
+  if (!data || !Array.isArray(data) || data.length === 0) return null
 
-  const ticks = POW2_TICKS.filter((t) => t >= data[0].tableSize && t <= data[data.length - 1].tableSize)
+  // Validate data points have required fields
+  const validData = data.filter((p) => typeof p.tableSize === 'number' && typeof p.mispredictionRate === 'number')
+  if (validData.length === 0) return null
+
+  const ticks = POW2_TICKS.filter((t) => t >= validData[0].tableSize && t <= validData[validData.length - 1].tableSize)
 
   return (
     <div className="bg-gray-800 rounded-lg border border-gray-700 p-5">
@@ -35,7 +39,7 @@ export default function ExperimentChart({ data, optimalRate, saturationTableSize
         Misprediction rate &amp; MPKI vs table size
       </h3>
       <ResponsiveContainer width="100%" height={380}>
-        <LineChart data={data} margin={{ top: 16, right: 32, left: 8, bottom: 8 }}>
+        <LineChart data={validData} margin={{ top: 16, right: 32, left: 8, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
           <XAxis
             dataKey="tableSize"

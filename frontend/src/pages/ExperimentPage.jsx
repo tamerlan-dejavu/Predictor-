@@ -42,10 +42,14 @@ export default function ExperimentPage() {
     setError(null)
     try {
       const { data } = await getExperiment({ predictor, ...DEFAULT_PARAMS })
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid response format: expected array of points')
+      }
       const sorted = [...data].sort((a, b) => a.tableSize - b.tableSize)
       setPoints(sorted)
     } catch (err) {
-      setError(err?.response?.data?.error || err.message || 'Не удалось выполнить запрос')
+      const errorMsg = err?.response?.data?.error || err?.message || 'Failed to run experiment'
+      setError(errorMsg)
       setPoints([])
     } finally {
       setLoading(false)
