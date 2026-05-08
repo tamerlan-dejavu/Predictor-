@@ -1,6 +1,6 @@
 # Branch Predictor Lab
 
-[![Java CI](https://github.com/devchonki/branch-predictor-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/devchonki/branch-predictor-lab/actions/workflows/ci.yml)
+[![Java CI](https://github.com/tamerlan-dejavu/Predictor-/actions/workflows/ci.yml/badge.svg)](https://github.com/tamerlan-dejavu/Predictor-/actions/workflows/ci.yml)
 
 **Topic 3 — Computer Architecture & OS**  
 **Team:** Девчонки — Тамерлан, Дария, Маша, Диана · *devchonki*  
@@ -75,6 +75,21 @@ npm run dev
 
 Дашборд: **http://localhost:5173** (прокси к `/api` настроен в `vite.config.js` при необходимости).
 
+### Продакшен: Render (API) + Vercel (фронт)
+
+1. **Render — Spring Boot**  
+   - Вариант A: в корне репозитория есть [`render.yaml`](render.yaml) и [`Dockerfile`](Dockerfile): создайте **Blueprint** или **Web Service** с runtime **Docker**.  
+   - После деплоя скопируйте публичный URL сервиса, например `https://branch-predictor-lab-api.onrender.com`.  
+   - В **Environment** задайте **`APP_CORS_ALLOWED_ORIGINS`** = URL фронта на Vercel (точное совпадение origin, без слэша в конце), например `https://your-app.vercel.app`. Несколько origin через запятую.  
+   - Порт: в `application.properties` уже задано `server.port=${PORT:8080}` — Render подставляет `PORT` сам.
+
+2. **Vercel — React (Vite)**  
+   - **Root Directory:** `frontend` · **Build Command:** `npm run build` · **Output Directory:** `dist`.  
+   - **Environment Variables:** `VITE_API_BASE_URL` = URL API **без** `/api` и без завершающего слэша (как в [`frontend/.env.example`](frontend/.env.example)), например `https://branch-predictor-lab-api.onrender.com`.  
+   - SPA-роуты: в корне фронта лежит [`frontend/vercel.json`](frontend/vercel.json) (fallback на `index.html`).
+
+3. Порядок: сначала задеплойте API на Render, затем пропишите его URL в Vercel и **пересоберите** фронт; после этого обновите **`APP_CORS_ALLOWED_ORIGINS`** на Render под финальный домен Vercel.
+
 ### Tests & coverage
 
 ```bash
@@ -98,13 +113,13 @@ src/main/java/kz/devchonki/predictor/
 ├── ExperimentRunner.java              # CLI: полный прогон экспериментов → results/
 ├── api/
 │   ├── PredictorController.java
-│   └── PredictorFactory.java
+│   ├── PredictorFactory.java
+│   └── WebCorsConfig.java
 ├── harness/Harness.java
 ├── model/  (PredictorStats, TraceEntry)
 ├── parser/TraceParser.java
 └── predictor/
     ├── BranchPredictor.java
-    ├── AbstractPredictor.java        # legacy / не все impl наследуют
     └── impl/
         ├── StaticPredictor.java
         ├── BimodalPredictor.java

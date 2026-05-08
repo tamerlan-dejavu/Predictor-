@@ -5,11 +5,8 @@ import kz.devchonki.predictor.model.PredictorStats;
 import kz.devchonki.predictor.model.TraceEntry;
 import kz.devchonki.predictor.parser.TraceParser;
 import kz.devchonki.predictor.predictor.BranchPredictor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -50,20 +47,6 @@ public class PredictorController {
         this.harness = harness;
         this.traceParser = traceParser;
         this.factory = factory;
-    }
-
-    // ── CORS ─────────────────────────────────────────────────────────────────
-
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:5173")
-                        .allowedMethods("GET", "POST", "OPTIONS");
-            }
-        };
     }
 
     // ── POST /api/run ─────────────────────────────────────────────────────────
