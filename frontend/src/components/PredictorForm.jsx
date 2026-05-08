@@ -24,7 +24,7 @@ export default function PredictorForm({ onSubmit, loading = false }) {
   const [selected, setSelected] = useState(['bimodal', 'gshare', 'tournament'])
   const [tableExp, setTableExp] = useState(10)   // 2^10 = 1024
   const [historyBits, setHistoryBits] = useState(8)
-  const [traceContent, setTraceContent] = useState('')
+  const [traceContent, setTraceContent] = useState(LOOP_10_TRACE)
 
   const tableSize = useMemo(() => 2 ** tableExp, [tableExp])
   const showHistory = useMemo(

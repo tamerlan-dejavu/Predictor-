@@ -54,7 +54,8 @@ public class TournamentPredictor implements BranchPredictor {
     private final BimodalPredictor local;
     private final GSharePredictor  global;
     private final int[]            chooser;
-    private final int              chooserMask;   // chooserSize - 1
+    private final int              chooserMask;      // chooserSize - 1
+    private final int              historyMask;      // (1 << historyBits) - 1 for GHR
 
     // ── tournament-level GHR (indexes chooser, independent of GShare's GHR) ──
     private int ghr = 0;
@@ -89,10 +90,11 @@ public class TournamentPredictor implements BranchPredictor {
         requirePowerOfTwo(globalTableSize, "globalTableSize");
         requirePowerOfTwo(chooserSize,     "chooserSize");
 
-        this.local       = new BimodalPredictor(localTableSize);
-        this.global      = new GSharePredictor(globalTableSize, historyBits);
-        this.chooser     = new int[chooserSize];
-        this.chooserMask = chooserSize - 1;
+        this.local         = new BimodalPredictor(localTableSize);
+        this.global        = new GSharePredictor(globalTableSize, historyBits);
+        this.chooser       = new int[chooserSize];
+        this.chooserMask   = chooserSize - 1;
+        this.historyMask   = (1 << historyBits) - 1;
 
         Arrays.fill(chooser, 1); // weakly local (neutral starting point)
     }
@@ -162,7 +164,6 @@ public class TournamentPredictor implements BranchPredictor {
         }
 
         // ── 4. update tournament GHR ─────────────────────────────────────────
-        int historyMask = (1 << global.getHistoryBits()) - 1;
         ghr = ((ghr << 1) | (taken ? 1 : 0)) & historyMask;
     }
 
