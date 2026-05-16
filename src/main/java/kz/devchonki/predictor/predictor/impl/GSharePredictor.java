@@ -2,7 +2,6 @@ package kz.devchonki.predictor.predictor.impl;
 
 import kz.devchonki.predictor.model.PredictorStats;
 import kz.devchonki.predictor.predictor.BranchPredictor;
-import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
@@ -28,7 +27,6 @@ import java.util.Arrays;
  *
  * @see BimodalPredictor
  */
-@Component
 public class GSharePredictor implements BranchPredictor {
 
     private static final int DEFAULT_TABLE_SIZE  = 1024;
@@ -45,7 +43,7 @@ public class GSharePredictor implements BranchPredictor {
 
     // ── constructors ─────────────────────────────────────────────────────────
 
-    /** Default Spring bean: 1024-entry PHT, 8-bit history. */
+    /** Default constructor: 1024-entry PHT, 8-bit history. */
     public GSharePredictor() {
         this(DEFAULT_TABLE_SIZE, DEFAULT_HISTORY_BITS);
     }

@@ -2,7 +2,6 @@ package kz.devchonki.predictor.predictor.impl;
 
 import kz.devchonki.predictor.model.PredictorStats;
 import kz.devchonki.predictor.predictor.BranchPredictor;
-import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
@@ -32,7 +31,6 @@ import java.util.Arrays;
  * Misprediction is scored in {@link #update} by comparing the counter state
  * at the time of update against the true outcome.
  */
-@Component
 public class BimodalPredictor implements BranchPredictor {
 
     private static final int DEFAULT_TABLE_SIZE = 1024;
@@ -45,7 +43,7 @@ public class BimodalPredictor implements BranchPredictor {
 
     // ── constructors ─────────────────────────────────────────────────────────
 
-    /** Default Spring bean: 1024-entry PHT. */
+    /** Default constructor: 1024-entry PHT. */
     public BimodalPredictor() {
         this(DEFAULT_TABLE_SIZE);
     }

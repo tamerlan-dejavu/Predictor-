@@ -2,7 +2,6 @@ package kz.devchonki.predictor.predictor.impl;
 
 import kz.devchonki.predictor.model.PredictorStats;
 import kz.devchonki.predictor.predictor.BranchPredictor;
-import org.springframework.stereotype.Component;
 
 /**
  * Stateless static predictor — no learning, no internal history tables.
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Component;
  * {@link #predict}/{@link #update} pair — {@link #predict} counts the attempt and
  * {@link #update} scores the outcome.
  */
-@Component
 public class StaticPredictor implements BranchPredictor {
 
     // ── strategy enum ────────────────────────────────────────────────────────
@@ -48,7 +46,7 @@ public class StaticPredictor implements BranchPredictor {
 
     // ── constructors ─────────────────────────────────────────────────────────
 
-    /** Default Spring bean: always-taken. */
+    /** Default constructor: always-taken. */
     public StaticPredictor() {
         this(StaticStrategy.ALWAYS_TAKEN);
     }

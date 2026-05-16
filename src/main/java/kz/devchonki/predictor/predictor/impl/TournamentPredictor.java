@@ -2,7 +2,6 @@ package kz.devchonki.predictor.predictor.impl;
 
 import kz.devchonki.predictor.model.PredictorStats;
 import kz.devchonki.predictor.predictor.BranchPredictor;
-import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
@@ -41,7 +40,6 @@ import java.util.Arrays;
  * from {@code predict()} and re-uses them in {@code update()} — no
  * double-counting of sub-predictor calls.
  */
-@Component
 public class TournamentPredictor implements BranchPredictor {
 
     // ── default configuration (Alpha 21264-inspired) ──────────────────────────
@@ -71,7 +69,7 @@ public class TournamentPredictor implements BranchPredictor {
 
     // ── constructors ─────────────────────────────────────────────────────────
 
-    /** Default Spring bean with Alpha 21264–like parameters. */
+    /** Default constructor with Alpha 21264–like parameters. */
     public TournamentPredictor() {
         this(DEFAULT_LOCAL_TABLE_SIZE, DEFAULT_GLOBAL_TABLE_SIZE,
                 DEFAULT_HISTORY_BITS, DEFAULT_CHOOSER_SIZE);
