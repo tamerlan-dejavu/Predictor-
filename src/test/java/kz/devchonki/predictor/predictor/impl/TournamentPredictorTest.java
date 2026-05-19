@@ -48,7 +48,6 @@ class TournamentPredictorTest {
         return p.getStats();
     }
 
-    // ── test_tournament_better_than_bimodal_and_gshare ────────────────────────
 
     @Test
     @DisplayName("test_tournament_better_than_bimodal_and_gshare: tournament adapts to best sub-predictor")
@@ -90,7 +89,6 @@ class TournamentPredictorTest {
                         + tStats.mispredictionRate() + "%");
     }
 
-    // ── test_chooser_adapts ───────────────────────────────────────────────────
 
     @Test
     @DisplayName("test_chooser_adapts: on alternating trace chooser shifts toward global")
@@ -104,7 +102,6 @@ class TournamentPredictorTest {
         run(p, trace);
 
         // After many alternating branches, global predictor wins more often.
-        // The tournament's miss rate should be significantly below Bimodal's ~50%.
         PredictorStats tStats = p.getStats();
         assertTrue(tStats.mispredictionRate() < 40.0,
                 "Chooser should adapt toward GShare on alternating trace; got "
@@ -138,7 +135,6 @@ class TournamentPredictorTest {
         PredictorStats gStats = run(gshare,   trace);
         PredictorStats tStats = run(tourney,  trace);
 
-        // All dynamic predictors should beat static on loop-10
         assertTrue(bStats.mispredictionRate() <= sStats.mispredictionRate(),
                 "Bimodal should be <= Static on loop-10");
         assertTrue(gStats.mispredictionRate() <= sStats.mispredictionRate() + 1.0,
@@ -153,7 +149,6 @@ class TournamentPredictorTest {
                         tStats.mispredictionRate(), bestDynamic));
     }
 
-    // ── test_reset_resets_all_internal_state ─────────────────────────────────
 
     @Test
     @DisplayName("test_reset_resets_all_internal_state")
