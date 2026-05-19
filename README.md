@@ -57,7 +57,39 @@ Tournament(...)-                  loop_10              0.30     3.0
 - Maven 3.9+
 - Node.js 20+ (для фронтенда)
 
-### Backend
+### Quick Start (Full Demo)
+
+**Windows:**
+```cmd
+run.bat
+```
+
+**Linux / macOS:**
+```bash
+chmod +x run.sh
+./run.sh
+```
+
+This launches both backend (http://localhost:8080) and frontend (http://localhost:5173) in separate terminal windows, then automatically opens the dashboard in your browser.
+
+**If already running, just open the UI:**
+
+**Windows:**
+```cmd
+open.bat
+```
+
+**Linux / macOS:**
+```bash
+chmod +x open.sh
+./open.sh
+```
+
+---
+
+### Manual Setup
+
+#### Backend
 
 ```bash
 mvn spring-boot:run
@@ -65,7 +97,7 @@ mvn spring-boot:run
 
 API: **http://localhost:8080** — например `GET /api/health`, `POST /api/run`, `GET /api/experiment`.
 
-### Frontend (в отдельном терминале)
+#### Frontend (в отдельном терминале)
 
 ```bash
 cd frontend
