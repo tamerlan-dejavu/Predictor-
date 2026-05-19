@@ -1,82 +1,55 @@
 #!/bin/bash
 
-# Branch Predictor Lab - Full Stack Demo Launcher
-# Запускает бэкенд + фронтенд и открывает браузер
+# Branch Predictor Lab - Demo Launcher (PRODUCTION)
+# фронтенд на Vercel, бэк на Render
+# Для локальной разработки: mvn spring-boot:run (отдельный терминал) + cd frontend && npm run dev
 
-set -e
+FRONTEND_URL="https://predictor-chi.vercel.app/"
+BACKEND_URL="https://predictor-api-whg0.onrender.com"
 
 echo
-echo "===== Branch Predictor Lab - Demo Launcher ====="
+echo "===== Branch Predictor Lab - Demo Launcher (PRODUCTION) ====="
 echo
 
-# Проверяем наличие Maven и Node.js
-if ! command -v mvn &> /dev/null; then
-    echo "ERROR: Maven not found. Please install Maven 3.9+ and add it to PATH."
-    exit 1
-fi
+echo "Production URLs:"
+echo "Backend API:   $BACKEND_URL"
+echo "Frontend UI:   $FRONTEND_URL"
+echo
 
-if ! command -v node &> /dev/null; then
-    echo "ERROR: Node.js not found. Please install Node.js 20+ and add it to PATH."
-    exit 1
-fi
+sleep 1
 
-# Получаем директорию скрипта
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$SCRIPT_DIR"
-
-echo "[1/4] Installing frontend dependencies..."
-cd frontend
-if [ ! -d "node_modules" ]; then
-    echo "Running: npm install"
-    npm install
+echo "[1/2] Waking up Render backend (if asleep after 15 min inactivity)..."
+if curl -s "$BACKEND_URL/api/health" > /dev/null 2>&1; then
+    echo "Backend is ready."
 else
-    echo "npm packages already installed."
+    echo "Note: Render backend may take a moment to wake up (30-60 sec)..."
 fi
-cd ..
+
+sleep 1
 
 echo
-echo "[2/4] Starting Spring Boot backend on http://localhost:8080..."
-echo
-mvn spring-boot:run &
-BACKEND_PID=$!
-sleep 3
-
-echo
-echo "[3/4] Starting React frontend on http://localhost:5173..."
-echo
-cd frontend
-npm run dev &
-FRONTEND_PID=$!
-cd ..
-
-sleep 2
-
-echo
-echo "[4/4] Opening browser..."
+echo "[2/2] Opening Vercel frontend in browser..."
 echo
 sleep 1
 
 # Открываем браузер (кроссплатформенно)
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS
-    open http://localhost:5173
+    open "$FRONTEND_URL"
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux
     if command -v xdg-open &> /dev/null; then
-        xdg-open http://localhost:5173
+        xdg-open "$FRONTEND_URL"
     elif command -v sensible-browser &> /dev/null; then
-        sensible-browser http://localhost:5173
+        sensible-browser "$FRONTEND_URL"
     fi
 fi
 
 echo
-echo "===== Demo is ready! ====="
+echo "===== Demo opened! ====="
 echo
-echo "Backend API:  http://localhost:8080"
-echo "Frontend UI:  http://localhost:5173"
+echo "Frontend: $FRONTEND_URL"
+echo "Backend:  $BACKEND_URL"
 echo
-echo "Press Ctrl+C to stop all servers."
+echo "If you see connection errors:"
+echo "1. Render backend might be sleeping (takes 30-60 sec to wake)"
+echo "2. Check both URLs are reachable manually"
 echo
-
-# Ожидаем завершения процессов
-wait $BACKEND_PID $FRONTEND_PID

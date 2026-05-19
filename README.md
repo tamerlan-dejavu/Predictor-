@@ -137,29 +137,44 @@ mvn verify          # тесты + JaCoCo check (line coverage ≥ 60 %)
 curl http://localhost:8080/api/health
 ```
 
-## Demo Instructions (For Defense)
+## Live Demo (Production)
 
-### During the exam, run:
+**Frontend:** https://predictor-chi.vercel.app/  
+**Backend API:** https://predictor-api-whg0.onrender.com
+
+### Quick launch for defense:
 
 ```cmd
 # Windows
-run.bat
+.\open.bat
+```
 
+```bash
+# Linux / macOS
+./open.sh
+```
+
+Or run the full demo launcher:
+
+```cmd
+# Windows
+.\run.bat
+```
+
+```bash
 # Linux / macOS
 ./run.sh
 ```
 
-The script will:
-1. ✅ Check Maven and Node.js are installed
-2. ✅ Install npm dependencies (if needed)
-3. ✅ Start Spring Boot backend (8080)
-4. ✅ Start React frontend (5173)
-5. ✅ Automatically open the dashboard in your browser
+Both will open the dashboard in your browser.
+
+⚠️ **Note:** Render backend may be asleep after 15 minutes of inactivity. If you see connection errors, wait 30-60 seconds for it to wake up.
 
 ### What to show:
-1. **Dashboard at http://localhost:5173** — interactive UI with:
+
+1. **Interactive Dashboard** — https://predictor-chi.vercel.app/
    - Predictor selection (Static, Bimodal, GShare, Tournament)
-   - Trace selection
+   - Trace selection (alternating, always_taken, always_not_taken, loop_10)
    - Configuration sliders (table size, history bits)
    - Real-time results (misprediction rate %, MPKI)
 
@@ -167,10 +182,9 @@ The script will:
    - Full sweep table (all predictors × all traces)
    - Comparison plots (GShare history length effect, tournament trade-offs)
 
-3. **API** at http://localhost:8080 — can show:
+3. **Backend API** — https://predictor-api-whg0.onrender.com
    - `GET /api/health` — status check
    - `GET /api/experiment` — batch results as JSON
-   - Backend logs showing predictor state
 
 ## Project Structure
 

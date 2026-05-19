@@ -1,74 +1,49 @@
 @echo off
-REM Branch Predictor Lab - Full Stack Demo Launcher
-REM Запускает бэкенд + фронтенд и открывает браузер
+REM Branch Predictor Lab - Demo Launcher
+REM PRODUCTION: фронтенд на Vercel, бэк на Render
+REM Для локальной разработки используйте: git branch local-dev && mvn spring-boot:run (отдельный терминал) + cd frontend && npm run dev
 
 echo.
-echo ===== Branch Predictor Lab - Demo Launcher =====
+echo ===== Branch Predictor Lab - Demo Launcher (PRODUCTION) =====
 echo.
 
-REM Проверяем наличие Maven и Node.js
-where mvn >nul 2>&1
+set FRONTEND_URL=https://predictor-chi.vercel.app/
+set BACKEND_URL=https://predictor-api-whg0.onrender.com
+
+echo Production URLs:
+echo Backend API:   %BACKEND_URL%
+echo Frontend UI:   %FRONTEND_URL%
+echo.
+
+timeout /t 1 /nobreak
+
+echo [1/2] Waking up Render backend (if asleep after 15 min inactivity)...
+curl -s %BACKEND_URL%/api/health >nul 2>&1
 if errorlevel 1 (
-    echo ERROR: Maven not found. Please install Maven 3.9+ and add it to PATH.
-    pause
-    exit /b 1
-)
-
-where node >nul 2>&1
-if errorlevel 1 (
-    echo ERROR: Node.js not found. Please install Node.js 20+ and add it to PATH.
-    pause
-    exit /b 1
-)
-
-REM Получаем директорию скрипта
-set SCRIPT_DIR=%~dp0
-cd /d "%SCRIPT_DIR%"
-
-echo [1/4] Installing frontend dependencies...
-cd frontend
-if not exist "node_modules\" (
-    echo Running: npm install
-    call npm install
-    if errorlevel 1 (
-        echo ERROR: npm install failed.
-        pause
-        exit /b 1
-    )
+    echo Note: Render backend may take a moment to wake up...
 ) else (
-    echo npm packages already installed.
+    echo Backend is ready.
 )
-cd ..
+
+timeout /t 1 /nobreak
 
 echo.
-echo [2/4] Starting Spring Boot backend on http://localhost:8080...
+echo [2/2] Opening Vercel frontend in browser...
 echo.
-start "Branch Predictor Lab - Backend" cmd /k "mvn spring-boot:run"
-timeout /t 3 /nobreak
+timeout /t 1 /nobreak
+
+start %FRONTEND_URL%
 
 echo.
-echo [3/4] Starting React frontend on http://localhost:5173...
+echo ===== Demo opened! =====
 echo.
-cd frontend
-start "Branch Predictor Lab - Frontend" cmd /k "npm run dev"
-cd ..
-
-timeout /t 2 /nobreak
-
+echo Frontend: %FRONTEND_URL%
+echo Backend:  %BACKEND_URL%
 echo.
-echo [4/4] Opening browser...
-echo.
-timeout /t 2 /nobreak
-
-REM Открываем браузер
-start http://localhost:5173
-
-echo.
-echo ===== Demo is ready! =====
-echo.
-echo Backend API:  http://localhost:8080
-echo Frontend UI:  http://localhost:5173
-echo.
-echo Press Ctrl+C in the terminal windows to stop the servers.
-echo.
+if errorlevel 1 (
+    echo If you see connection errors:
+    echo 1. Render backend might be sleeping (takes 30-60 sec to wake)
+    echo 2. Check both URLs are reachable manually
+    echo.
+)
 pause
