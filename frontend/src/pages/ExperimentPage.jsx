@@ -9,13 +9,14 @@ const PREDICTORS = [
   { value: 'tournament', label: 'Tournament' },
 ]
 
-// LOOP_10_TRACE: 10 iterations of (9 taken + 1 not-taken) = 100 branches total
+// MULTI_PC_TRACE: 50 distinct PCs repeated 20 times = 1000 branches total
+// Small tables cause heavy aliasing; large tables give each PC its own slot.
 const LOOP_10_TRACE = (() => {
+  const pcs = Array.from({ length: 50 }, (_, i) => `0x${(0x1000 + i * 0x40).toString(16)}`)
+  const outcomes = pcs.map((_, i) => (i % 3 === 0 ? 0 : 1))
   let s = ''
-  for (let i = 0; i < 10; i++) {
-    for (let j = 0; j < 9; j++) s += '0x400000 1\n'
-    s += '0x400000 0\n'
-  }
+  for (let rep = 0; rep < 20; rep++)
+    pcs.forEach((pc, i) => { s += `${pc} ${outcomes[i]}\n` })
   return s
 })()
 
@@ -133,7 +134,7 @@ export default function ExperimentPage() {
         </div>
 
         <div className="text-xs text-gray-500">
-          <div>Trace: <span className="font-mono text-gray-400">LOOP_10</span> (100 branches: 90 taken, 10 not-taken)</div>
+          <div>Trace: <span className="font-mono text-gray-400">MULTI_PC</span> (1000 branches: 50 distinct PCs × 20 repetitions)</div>
           <div>Table sizes: <span className="font-mono text-gray-400">16 to 65536</span> ({TABLE_SIZES.length} points)</div>
           <div>History bits: <span className="font-mono text-gray-400">8</span> (for GShare & Tournament)</div>
         </div>
