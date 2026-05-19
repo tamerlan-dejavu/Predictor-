@@ -8,6 +8,7 @@ class BranchPredictorApplicationTests {
 
     @Test
     void contextLoads() {
+
         // verifies that the Spring application context starts without errors
     }
 }
