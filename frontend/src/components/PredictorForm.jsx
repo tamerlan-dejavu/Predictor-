@@ -6,6 +6,7 @@ const PREDICTORS = [
   { value: 'tournament',   label: 'Tournament',  usesHistory: true  },
   { value: 'static_taken', label: 'Static (AT)', usesHistory: false },
   { value: 'static_nt',    label: 'Static (NT)', usesHistory: false },
+  { value: 'btfn',         label: 'Static (BTFN)', usesHistory: false },
 ]
 
 // loop_10: 10 iterations of (9 taken + 1 not-taken) at 0x400000
