@@ -122,6 +122,7 @@ public class TournamentPredictor implements BranchPredictor {
         return lastUsedGlobal ? lastGlobalPred : lastLocalPred;
     }
 
+
     /**
      * <ol>
      *   <li>Scores the tournament prediction using the decision snapshotted in
