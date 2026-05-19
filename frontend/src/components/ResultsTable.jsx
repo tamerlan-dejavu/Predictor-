@@ -1,5 +1,16 @@
 import { useMemo, useState } from 'react'
 
+function abbreviateName(name) {
+  // Check longer/more specific patterns first
+  if (name.includes('Tournament')) return 'Tournament'
+  if (name.includes('GShare')) return 'GShare'
+  if (name.includes('Bimodal')) return 'Bimodal'
+  if (name.includes('ALWAYS_TAKEN')) return 'Static_T'
+  if (name.includes('ALWAYS_NOT_TAKEN')) return 'Static_NT'
+  if (name.includes('BTFN')) return 'Static_BTFN'
+  return name
+}
+
 const COLUMNS = [
   { key: 'predictorName',     label: 'Predictor',     align: 'left'  },
   { key: 'totalPredictions',  label: 'Total',         align: 'right' },
@@ -73,8 +84,9 @@ export default function ResultsTable({ rows }) {
             <tr
               key={`${r.predictorName}-${i}`}
               className={`border-t border-gray-700 transition-colors ${rowClass(r.mispredictionRate)}`}
+              title={r.predictorName}
             >
-              <td className="px-4 py-2.5 font-medium text-white">{r.predictorName}</td>
+              <td className="px-4 py-2.5 font-medium text-white">{abbreviateName(r.predictorName)}</td>
               <td className="px-4 py-2.5 text-right tabular-nums text-gray-200">{r.totalPredictions.toLocaleString()}</td>
               <td className="px-4 py-2.5 text-right tabular-nums text-gray-200">{r.mispredictions.toLocaleString()}</td>
               <td className="px-4 py-2.5 text-right tabular-nums text-gray-200">{r.mispredictionRate.toFixed(2)}%</td>

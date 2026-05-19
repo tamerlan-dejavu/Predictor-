@@ -1,20 +1,20 @@
 import { useMemo, useState } from 'react'
 
 const PREDICTORS = [
-  { value: 'bimodal',      label: 'Bimodal',     usesHistory: false },
-  { value: 'gshare',       label: 'GShare',      usesHistory: true  },
-  { value: 'tournament',   label: 'Tournament',  usesHistory: true  },
-  { value: 'static_taken', label: 'Static (AT)', usesHistory: false },
-  { value: 'static_nt',    label: 'Static (NT)', usesHistory: false },
+  { value: 'bimodal',      label: 'Bimodal',       usesHistory: false },
+  { value: 'gshare',       label: 'GShare',        usesHistory: true  },
+  { value: 'tournament',   label: 'Tournament',    usesHistory: true  },
+  { value: 'static_taken', label: 'Static (AT)',   usesHistory: false },
+  { value: 'static_nt',    label: 'Static (NT)',   usesHistory: false },
   { value: 'btfn',         label: 'Static (BTFN)', usesHistory: false },
 ]
 
-// loop_10: 10 iterations of (9 taken + 1 not-taken) at 0x400000
+// loop_8: 50 iterations of (7 taken + 1 not-taken) at 0x1000
 const LOOP_10_TRACE = (() => {
   let s = ''
-  for (let i = 0; i < 10; i++) {
-    for (let j = 0; j < 9; j++) s += '0x400000 1\n'
-    s += '0x400000 0\n'
+  for (let i = 0; i < 50; i++) {
+    for (let j = 0; j < 7; j++) s += '0x1000 1\n'
+    s += '0x1000 0\n'
   }
   return s
 })()
@@ -22,7 +22,7 @@ const LOOP_10_TRACE = (() => {
 const log2 = (n) => Math.round(Math.log2(n))
 
 export default function PredictorForm({ onSubmit, loading = false }) {
-  const [selected, setSelected] = useState(['bimodal', 'gshare', 'tournament'])
+  const [selected, setSelected] = useState(['bimodal', 'gshare', 'tournament', 'static_taken', 'static_nt', 'btfn'])
   const [tableExp, setTableExp] = useState(10)   // 2^10 = 1024
   const [historyBits, setHistoryBits] = useState(8)
   const [traceContent, setTraceContent] = useState('')
