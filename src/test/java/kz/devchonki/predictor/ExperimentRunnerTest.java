@@ -8,9 +8,6 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Covers {@link ExperimentRunner#main} as a black-box CLI (writes CSV under {@code results/}).
- */
 @DisplayName("ExperimentRunner CLI")
 class ExperimentRunnerTest {
 
