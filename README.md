@@ -137,6 +137,41 @@ mvn verify          # тесты + JaCoCo check (line coverage ≥ 60 %)
 curl http://localhost:8080/api/health
 ```
 
+## Demo Instructions (For Defense)
+
+### During the exam, run:
+
+```cmd
+# Windows
+run.bat
+
+# Linux / macOS
+./run.sh
+```
+
+The script will:
+1. ✅ Check Maven and Node.js are installed
+2. ✅ Install npm dependencies (if needed)
+3. ✅ Start Spring Boot backend (8080)
+4. ✅ Start React frontend (5173)
+5. ✅ Automatically open the dashboard in your browser
+
+### What to show:
+1. **Dashboard at http://localhost:5173** — interactive UI with:
+   - Predictor selection (Static, Bimodal, GShare, Tournament)
+   - Trace selection
+   - Configuration sliders (table size, history bits)
+   - Real-time results (misprediction rate %, MPKI)
+
+2. **Charts & Experiments** — click "Run Experiment" to show:
+   - Full sweep table (all predictors × all traces)
+   - Comparison plots (GShare history length effect, tournament trade-offs)
+
+3. **API** at http://localhost:8080 — can show:
+   - `GET /api/health` — status check
+   - `GET /api/experiment` — batch results as JSON
+   - Backend logs showing predictor state
+
 ## Project Structure
 
 ```
